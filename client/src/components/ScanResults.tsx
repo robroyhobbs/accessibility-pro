@@ -227,10 +227,10 @@ export default function ScanResults() {
         </CardContent>
       </Card>
       
-      <Tabs defaultValue="violations">
+      <Tabs defaultValue="summary">
         <TabsList className="mb-6">
-          <TabsTrigger value="violations">Violations ({violations.length})</TabsTrigger>
           <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="violations">Violations ({violations.length})</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
           {isMultiPage && <TabsTrigger value="pages">Pages ({pagesScanned.length})</TabsTrigger>}
         </TabsList>

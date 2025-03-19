@@ -223,11 +223,11 @@ export default function ScanDetailPage() {
       </div>
 
       {/* Detailed Results */}
-      <Tabs defaultValue="issues" className="mt-6">
+      <Tabs defaultValue="summary" className="mt-6">
         <TabsList className="mb-4">
-          <TabsTrigger value="issues">Issues</TabsTrigger>
-          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
           <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="issues">Violations</TabsTrigger>
+          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
           {scan.isPaid && <TabsTrigger value="code">Code Fixes</TabsTrigger>}
         </TabsList>
         
