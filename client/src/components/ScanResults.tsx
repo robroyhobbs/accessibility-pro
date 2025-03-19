@@ -328,14 +328,159 @@ export default function ScanResults() {
                 </div>
                 
                 <div className="p-4 border rounded-md">
-                  <h3 className="font-semibold mb-2">General Recommendations</h3>
-                  <ul className="ml-7 list-disc space-y-2">
-                    <li>Ensure all images have meaningful alt text</li>
-                    <li>Maintain sufficient color contrast for text elements</li>
-                    <li>Add proper ARIA labels to interactive elements</li>
-                    <li>Ensure keyboard navigation is possible throughout the site</li>
-                    <li>Provide visible focus indicators for all interactive elements</li>
-                  </ul>
+                  <h3 className="font-semibold mb-2">General Recommendations with Code Examples</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-1">1. Image Accessibility</h4>
+                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                        {/* Bad example */}
+                        <div className="text-red-500 dark:text-red-400">
+                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
+                          &lt;img src="logo.png" /&gt;
+                        </div>
+                        {/* Good example */}
+                        <div className="text-green-500 dark:text-green-400 mt-2">
+                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
+                          &lt;img src="logo.png" alt="Company Logo - Homepage Link" /&gt;
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        All images must have appropriate alt text that describes the image content or purpose.
+                        Decorative images should use alt="" to be ignored by screen readers.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-1">2. Color Contrast</h4>
+                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                        {/* Bad example */}
+                        <div className="text-red-500 dark:text-red-400">
+                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
+                          .text &#123; color: #777; background-color: #eee; &#125;
+                        </div>
+                        {/* Good example */}
+                        <div className="text-green-500 dark:text-green-400 mt-2">
+                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
+                          .text &#123; color: #505050; background-color: #ffffff; &#125;
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Ensure text has sufficient contrast against its background. WCAG 2.1 AA requires
+                        a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-1">3. Form Inputs</h4>
+                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                        {/* Bad example */}
+                        <div className="text-red-500 dark:text-red-400">
+                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
+                          &lt;input type="text" placeholder="Enter name" /&gt;
+                        </div>
+                        {/* Good example */}
+                        <div className="text-green-500 dark:text-green-400 mt-2">
+                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
+                          &lt;label for="name"&gt;Name&lt;/label&gt;<br />
+                          &lt;input type="text" id="name" name="name" aria-describedby="name-help" /&gt;<br />
+                          &lt;div id="name-help"&gt;Please enter your full name&lt;/div&gt;
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Form controls must have associated labels and clear instructions.
+                        Don't rely on placeholder text as the only form of labeling.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-md">
+                  <h3 className="font-semibold mb-2">Advanced Accessibility Code Examples</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-1">1. Semantic HTML Structure</h4>
+                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                        {/* Bad example */}
+                        <div className="text-red-500 dark:text-red-400">
+                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
+                          &lt;div class="header"&gt;&lt;div class="logo"&gt;Site Name&lt;/div&gt;&lt;/div&gt;<br />
+                          &lt;div class="navigation"&gt;...&lt;/div&gt;<br />
+                          &lt;div class="content"&gt;...&lt;/div&gt;<br />
+                          &lt;div class="footer"&gt;...&lt;/div&gt;
+                        </div>
+                        {/* Good example */}
+                        <div className="text-green-500 dark:text-green-400 mt-2">
+                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
+                          &lt;header&gt;&lt;h1&gt;Site Name&lt;/h1&gt;&lt;/header&gt;<br />
+                          &lt;nav aria-label="Main Navigation"&gt;...&lt;/nav&gt;<br />
+                          &lt;main&gt;<br />
+                          &nbsp;&nbsp;&lt;article&gt;...&lt;/article&gt;<br />
+                          &lt;/main&gt;<br />
+                          &lt;footer&gt;...&lt;/footer&gt;
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Use semantic HTML elements to provide meaning and structure to your content.
+                        This helps assistive technologies understand the document structure.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-1">2. ARIA for Custom Components</h4>
+                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                        {/* Example */}
+                        <div>
+                          <span className="text-muted-foreground">// Custom dropdown example</span><br />
+                          &lt;div role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="dropdown-label"&gt;<br />
+                          &nbsp;&nbsp;&lt;span id="dropdown-label"&gt;Choose an option:&lt;/span&gt;<br />
+                          &nbsp;&nbsp;&lt;div tabindex="0" aria-controls="dropdown-list"&gt;Selected option&lt;/div&gt;<br />
+                          &nbsp;&nbsp;&lt;ul id="dropdown-list" role="listbox" aria-labelledby="dropdown-label" hidden&gt;<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;&lt;li role="option" tabindex="-1"&gt;Option 1&lt;/li&gt;<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;&lt;li role="option" tabindex="-1"&gt;Option 2&lt;/li&gt;<br />
+                          &nbsp;&nbsp;&lt;/ul&gt;<br />
+                          &lt;/div&gt;
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        When creating custom components, use ARIA roles, states, and properties to ensure 
+                        they are accessible to assistive technologies. Test with keyboard navigation.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-1">3. JavaScript for Accessibility</h4>
+                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                        <pre className="text-xs">
+{`// Managing focus for dialogs
+const dialog = document.getElementById('dialog');
+const focusableElements = dialog.querySelectorAll(
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+);
+
+// Trap focus in dialog
+dialog.addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    // Keep focus trapped inside dialog
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    
+    if (e.shiftKey && document.activeElement === firstElement) {
+      lastElement.focus();
+      e.preventDefault();
+    } else if (!e.shiftKey && document.activeElement === lastElement) {
+      firstElement.focus();
+      e.preventDefault();
+    }
+  }
+});`}
+                        </pre>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Use JavaScript to enhance accessibility by managing focus, adding keyboard 
+                        support, and ensuring interactive elements have proper ARIA states.
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="p-4 border rounded-md">
