@@ -143,44 +143,122 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Premium Features Highlight */}
-      <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-bold mb-4">Premium Features Available</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="flex items-start">
-            <div className="mr-2 h-6 w-6 text-primary">
-              <CheckCircle className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="font-medium">Multi-page Scanning</h3>
-              <p className="text-sm text-muted-foreground">
-                Scan multiple pages of your site in one go
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start">
-            <div className="mr-2 h-6 w-6 text-primary">
-              <CheckCircle className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="font-medium">PDF Reports</h3>
-              <p className="text-sm text-muted-foreground">
-                Export detailed reports in PDF format
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start">
-            <div className="mr-2 h-6 w-6 text-primary">
-              <CheckCircle className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="font-medium">Code Remediation</h3>
-              <p className="text-sm text-muted-foreground">
-                Get code examples to fix issues
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Subscription Status */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Subscription</h2>
+        <Card>
+          <CardContent className="pt-6">
+            {user?.subscriptionStatus === "active" ? (
+              <div>
+                <div className="mb-4 flex items-center">
+                  <div className="mr-4 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Pro Plan Active</h3>
+                    <p className="text-muted-foreground">
+                      Your subscription is active. Enjoy all premium features!
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3 mt-6">
+                  <div className="flex items-start">
+                    <div className="mr-2 h-6 w-6 text-primary">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Multi-page Scanning</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Scan up to 10 pages in one go
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-2 h-6 w-6 text-primary">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Unlimited Scans</h3>
+                      <p className="text-sm text-muted-foreground">
+                        No daily scan limits
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-2 h-6 w-6 text-primary">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Detailed Reports</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Get comprehensive recommendations
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button variant="outline" onClick={() => window.open('https://dashboard.stripe.com', '_blank')}>
+                    Manage Billing
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="mb-4 flex items-center">
+                  <div className="mr-4 h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                    <AlertCircle className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Free Plan</h3>
+                    <p className="text-muted-foreground">
+                      Upgrade to Pro for advanced accessibility testing features.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3 mt-6">
+                  <div className="flex items-start">
+                    <div className="mr-2 h-6 w-6 text-primary">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Multi-page Scanning</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Scan multiple pages of your site in one go
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-2 h-6 w-6 text-primary">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">PDF Reports</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Export detailed reports in PDF format
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="mr-2 h-6 w-6 text-primary">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Code Remediation</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Get code examples to fix issues
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Link href="/pricing">
+                    <Button>Upgrade to Pro</Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Activity - Timeline */}

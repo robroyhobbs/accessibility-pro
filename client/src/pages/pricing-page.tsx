@@ -76,7 +76,12 @@ export default function PricingPage() {
         </Card>
 
         {/* Pro Plan */}
-        <Card className="border-primary">
+        <Card className="border-primary relative">
+          {user?.subscriptionStatus === "active" && (
+            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+              Current Plan
+            </span>
+          )}
           <CardHeader>
             <CardTitle className="text-2xl">Pro</CardTitle>
             <p className="text-3xl font-bold">$19.99</p>
