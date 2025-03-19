@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,8 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Layers } from "lucide-react";
 import { isValidUrl, isSafeUrl } from "@/lib/validators";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 
 // Extend the urlInputSchema for form validation
 const formSchema = urlInputSchema.extend({
@@ -27,14 +29,29 @@ export default function ScanForm() {
   const { user } = useAuth();
   const { setScanState, setScannedUrl, setResults } = useScanContext();
   const [isValidating, setIsValidating] = useState(false);
+  const [showMultiPageOptions, setShowMultiPageOptions] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       url: "",
       isPaid: false,
+      isMultiPage: false,
+      scanDepth: 3,
     },
   });
+
+  // Watch for premium option changes to show/hide multi-page options
+  const isPaidValue = form.watch("isPaid");
+  
+  useEffect(() => {
+    // If premium is turned off, reset multi-page options
+    if (!isPaidValue && form.getValues("isMultiPage")) {
+      form.setValue("isMultiPage", false);
+      form.setValue("scanDepth", 1);
+      setShowMultiPageOptions(false);
+    }
+  }, [isPaidValue, form]);
 
   const scanMutation = useMutation({
     mutationFn: async (data: FormValues) => {
@@ -157,29 +174,87 @@ export default function ScanForm() {
               />
 
               {user && (
-                <FormField
-                  control={form.control}
-                  name="isPaid"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                <>
+                  <FormField
+                    control={form.control}
+                    name="isPaid"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="flex items-center">
+                            Use Premium Scan
+                            <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">PRO</Badge>
+                          </FormLabel>
+                          <FormDescription>
+                            Includes deeper analysis, code suggestions, and multi-page scanning
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {isPaidValue && (
+                    <div className="space-y-4 rounded-md border p-4">
+                      <FormField
+                        control={form.control}
+                        name="isMultiPage"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between">
+                            <div className="space-y-0.5">
+                              <FormLabel className="flex items-center">
+                                <Layers className="h-4 w-4 mr-2" />
+                                Multi-Page Scan
+                              </FormLabel>
+                              <FormDescription>
+                                Scan multiple pages of the website
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  setShowMultiPageOptions(checked);
+                                }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      {showMultiPageOptions && (
+                        <FormField
+                          control={form.control}
+                          name="scanDepth"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Scan Depth: {field.value} page{field.value > 1 ? 's' : ''}</FormLabel>
+                              <FormControl>
+                                <Slider
+                                  min={1}
+                                  max={10}
+                                  step={1}
+                                  value={[field.value]}
+                                  onValueChange={(values) => field.onChange(values[0])}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Choose how many pages to scan (1-10)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="flex items-center">
-                          Use Premium Scan
-                          <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">PRO</Badge>
-                        </FormLabel>
-                        <FormDescription>
-                          Includes deeper analysis, code suggestions, and multi-page scanning
-                        </FormDescription>
-                      </div>
-                    </FormItem>
+                      )}
+                    </div>
                   )}
-                />
+                </>
               )}
             </form>
           </Form>

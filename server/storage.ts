@@ -86,6 +86,9 @@ export class PostgresStorage implements IStorage {
           violations JSONB NOT NULL,
           "userId" INTEGER REFERENCES users(id),
           "isPaid" BOOLEAN DEFAULT FALSE,
+          "isMultiPage" BOOLEAN DEFAULT FALSE,
+          "scanDepth" INTEGER DEFAULT 1,
+          "pagesScanned" JSONB DEFAULT '[]',
           "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `);

@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw, Download, AlertTriangle, Info, ChevronRight } from "lucide-react";
+import { Loader2, RefreshCw, Download, AlertTriangle, Info, ChevronRight, Globe, Layers } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ComplianceGauge from "./ComplianceGauge";
 
 type WcagViolation = {
