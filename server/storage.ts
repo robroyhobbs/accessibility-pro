@@ -26,12 +26,21 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User>;
   
   // Scan operations
   getScan(id: number): Promise<Scan | undefined>;
   getUserScans(userId: number): Promise<Scan[]>;
   createScan(scan: InsertScan): Promise<Scan>;
   getLatestScans(limit: number): Promise<Scan[]>;
+  
+  // Subscription operations
+  updateSubscription(
+    userId: number, 
+    stripeCustomerId: string, 
+    subscriptionStatus: string,
+    subscriptionEndsAt: Date | null
+  ): Promise<User>;
   
   // Session store for authentication
   sessionStore: session.Store;
@@ -114,6 +123,28 @@ export class PostgresStorage implements IStorage {
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
   }
+
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
+    const result = await db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateSubscription(
+    userId: number,
+    stripeCustomerId: string,
+    subscriptionStatus: string,
+    subscriptionEndsAt: Date | null
+  ): Promise<User> {
+    return this.updateUser(userId, {
+      stripeCustomerId,
+      subscriptionStatus,
+      subscriptionEndsAt
+    });
+  }
   
   async getScan(id: number): Promise<Scan | undefined> {
     const result = await db.select().from(scans).where(eq(scans.id, id));
@@ -181,10 +212,36 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      stripeCustomerId: null,
+      subscriptionStatus: "free",
+      subscriptionEndsAt: null
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error(`User ${id} not found`);
+    }
+    const updatedUser = { ...user, ...data };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async updateSubscription(
+    userId: number,
+    stripeCustomerId: string,
+    subscriptionStatus: string,
+    subscriptionEndsAt: Date | null
+  ): Promise<User> {
+    return this.updateUser(userId, {
+      stripeCustomerId,
+      subscriptionStatus,
+      subscriptionEndsAt
+    });
   }
   
   async getScan(id: number): Promise<Scan | undefined> {

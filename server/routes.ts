@@ -5,6 +5,15 @@ import { scanWebsite } from "./scanner";
 import { urlInputSchema, type InsertScan } from "@shared/schema";
 import { isSafeUrl } from "../client/src/lib/validators";
 import { setupAuth } from "./auth";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("STRIPE_SECRET_KEY is not set");
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16"
+});
 
 // Middleware to ensure user is authenticated
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -208,6 +217,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({
         message: "An error occurred while fetching your scans."
       });
+    }
+  });
+
+  // Create a Stripe Checkout Session for subscription
+  app.post("/api/create-checkout-session", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as Express.User;
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        mode: "subscription",
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              recurring: {
+                interval: "month"
+              },
+              product_data: {
+                name: "WCAG Pro Subscription",
+                description: "Unlimited accessibility scans with multi-page support"
+              },
+              unit_amount: 1999, // $19.99 per month
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${req.protocol}://${req.get("host")}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get("host")}/subscription/cancel`,
+        customer_email: user.email,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Error creating checkout session" });
+    }
+  });
+
+  // Webhook endpoint for Stripe events
+  app.post("/api/webhooks", async (req: Request, res: Response) => {
+    const sig = req.headers["stripe-signature"];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    let event;
+
+    try {
+      if (!sig || !endpointSecret) {
+        throw new Error("Missing Stripe webhook signature or secret");
+      }
+      event = stripe.webhooks.constructEvent(
+        (req as any).rawBody,
+        sig,
+        endpointSecret
+      );
+    } catch (err: any) {
+      console.error("Webhook signature verification failed:", err.message);
+      return res.status(400).send("Webhook Error");
+    }
+
+    try {
+      // Handle subscription lifecycle events
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          if (session.customer_email) {
+            const user = await storage.getUserByUsername(session.customer_email);
+            if (user) {
+              await storage.updateSubscription(
+                user.id,
+                session.customer as string,
+                "active",
+                null // No end date for active subscriptions
+              );
+            }
+          }
+          break;
+        }
+        case "customer.subscription.updated":
+        case "customer.subscription.deleted": {
+          const subscription = event.data.object as Stripe.Subscription;
+          if (subscription.customer) {
+            const customerId = typeof subscription.customer === "string" 
+              ? subscription.customer 
+              : subscription.customer.id;
+            
+            const status = subscription.status === "active" ? "active" : "canceled";
+            const endsAt = subscription.status === "active"
+              ? null
+              : new Date(subscription.current_period_end * 1000);
+
+            // Update all users with this customer ID
+            const user = await storage.getUser(Number(subscription.metadata.userId));
+            if (user) {
+              await storage.updateSubscription(
+                user.id,
+                customerId,
+                status,
+                endsAt
+              );
+            }
+          }
+          break;
+        }
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Error processing webhook:", error);
+      res.status(500).json({ message: "Error processing webhook" });
     }
   });
 

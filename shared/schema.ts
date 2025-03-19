@@ -9,6 +9,9 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  stripeCustomerId: text("stripeCustomerId"),
+  subscriptionStatus: text("subscriptionStatus").default("free").notNull(),
+  subscriptionEndsAt: timestamp("subscriptionEndsAt"),
 });
 
 // Scan schema
