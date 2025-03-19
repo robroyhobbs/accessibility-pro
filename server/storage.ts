@@ -53,7 +53,7 @@ export class PostgresStorage implements IStorage {
 
   async setupDatabase(): Promise<void> {
     try {
-      // This is simplified - in a production app, we'd use proper migrations
+      // Create session table for authentication
       await pool.query(`
         CREATE TABLE IF NOT EXISTS session (
           sid VARCHAR(255) PRIMARY KEY,
@@ -62,6 +62,32 @@ export class PostgresStorage implements IStorage {
         );
         
         CREATE INDEX IF NOT EXISTS IDX_session_expire ON session (expire);
+      `);
+      
+      // Create users table
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          username VARCHAR(255) NOT NULL UNIQUE,
+          password VARCHAR(255) NOT NULL,
+          email VARCHAR(255),
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      
+      // Create scans table
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS scans (
+          id SERIAL PRIMARY KEY,
+          url TEXT NOT NULL,
+          score INTEGER NOT NULL,
+          passed_checks INTEGER NOT NULL,
+          issue_count INTEGER NOT NULL,
+          violations JSONB NOT NULL,
+          user_id INTEGER REFERENCES users(id),
+          is_paid BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
       `);
       
       console.log("Database setup completed");
