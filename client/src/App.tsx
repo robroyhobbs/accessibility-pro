@@ -10,6 +10,8 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import DashboardPage from "@/pages/dashboard-page";
+import ScanDetailPage from "@/pages/scan-detail-page";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -18,6 +20,12 @@ function Router() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/dashboard">
+        <ProtectedRoute path="/dashboard" component={DashboardPage} />
+      </Route>
+      <Route path="/scans/:id">
+        <ProtectedRoute path="/scans/:id" component={ScanDetailPage} />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -29,9 +37,18 @@ function App() {
       <AuthProvider>
         <ScanProvider>
           <div className="min-h-screen flex flex-col bg-gray-50">
-            <Header />
-            <Router />
-            <Footer />
+            <Route path="/auth">
+              {() => null}
+            </Route>
+            <Route path="*">
+              {() => <Header />}
+            </Route>
+            <main className="flex-grow">
+              <Router />
+            </main>
+            <Route path="*">
+              {() => <Footer />}
+            </Route>
           </div>
           <Toaster />
         </ScanProvider>
