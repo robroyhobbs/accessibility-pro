@@ -31,6 +31,7 @@ export default function ScanResults() {
   const { scannedUrl, results, setScanState } = useScanContext();
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedPage, setSelectedPage] = useState<string | null>(null);
 
   if (!results) {
     return (
@@ -40,7 +41,7 @@ export default function ScanResults() {
     );
   }
 
-  const { score, passedChecks, issueCount, violations } = results;
+  const { score, passedChecks, issueCount, violations, isMultiPage, pagesScanned = [], pageResults = [] } = results;
 
   const handleRunNewScan = () => {
     setScanState("idle");
@@ -75,8 +76,14 @@ export default function ScanResults() {
           <div className="grid gap-8 md:grid-cols-2">
             <div className="flex flex-col justify-center">
               <h2 className="text-2xl font-bold mb-2">Scan Results</h2>
-              <div className="text-muted-foreground mb-4 truncate">
+              <div className="text-muted-foreground mb-4 truncate flex items-center">
                 <span className="font-medium text-foreground">{scannedUrl}</span>
+                {isMultiPage && (
+                  <Badge variant="outline" className="ml-2 bg-primary/10 text-primary flex items-center">
+                    <Layers className="h-3 w-3 mr-1" />
+                    Multi-Page ({pagesScanned.length})
+                  </Badge>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -126,6 +133,7 @@ export default function ScanResults() {
           <TabsTrigger value="violations">Violations ({violations.length})</TabsTrigger>
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+          {isMultiPage && <TabsTrigger value="pages">Pages ({pagesScanned.length})</TabsTrigger>}
         </TabsList>
         
         <TabsContent value="violations">
@@ -344,6 +352,140 @@ export default function ScanResults() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {isMultiPage && (
+          <TabsContent value="pages">
+            <Card>
+              <CardHeader>
+                <CardTitle>Multi-Page Analysis</CardTitle>
+                <CardDescription>
+                  Accessibility results for each scanned page
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Page selector */}
+                  <div className="flex items-center space-x-4">
+                    <Globe className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <Select 
+                        value={selectedPage || ''} 
+                        onValueChange={(value) => setSelectedPage(value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a page to view details" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pagesScanned.map((page) => (
+                            <SelectItem key={page} value={page}>
+                              {page}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {/* Summary of all pages */}
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+                    {pageResults.map((page) => (
+                      <div 
+                        key={page.url} 
+                        className={`border rounded-lg p-4 hover:bg-muted/30 transition-colors cursor-pointer ${
+                          selectedPage === page.url ? 'border-primary bg-primary/5' : ''
+                        }`}
+                        onClick={() => setSelectedPage(page.url)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-medium text-sm truncate flex-1" title={page.url}>
+                            {page.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                          </h3>
+                          <Badge variant="outline" className="ml-2 whitespace-nowrap">
+                            {page.score.toFixed(0)}%
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Issues: </span>
+                            <span className="font-medium">{page.issueCount}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Passed: </span>
+                            <span className="font-medium">{page.passedChecks}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Selected page details */}
+                  {selectedPage && (
+                    <div className="border rounded-lg p-4 mt-4">
+                      <h3 className="font-semibold mb-4 flex items-center">
+                        <Layers className="h-5 w-5 mr-2" />
+                        Page Details: {selectedPage}
+                      </h3>
+                      
+                      {pageResults.find(p => p.url === selectedPage) ? (
+                        <div className="space-y-4">
+                          {(() => {
+                            const pageData = pageResults.find(p => p.url === selectedPage)!;
+                            const pageViolations = pageData.violations;
+                            
+                            return (
+                              <>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                  <div className="p-3 border rounded-lg">
+                                    <p className="text-2xl font-bold">{pageData.score.toFixed(0)}%</p>
+                                    <p className="text-xs text-muted-foreground">Compliance</p>
+                                  </div>
+                                  <div className="p-3 border rounded-lg">
+                                    <p className="text-2xl font-bold">{pageData.issueCount}</p>
+                                    <p className="text-xs text-muted-foreground">Issues</p>
+                                  </div>
+                                  <div className="p-3 border rounded-lg">
+                                    <p className="text-2xl font-bold">{pageData.passedChecks}</p>
+                                    <p className="text-xs text-muted-foreground">Passed</p>
+                                  </div>
+                                  <div className="p-3 border rounded-lg">
+                                    <p className="text-2xl font-bold">{pageViolations.length}</p>
+                                    <p className="text-xs text-muted-foreground">Violations</p>
+                                  </div>
+                                </div>
+                                
+                                <h4 className="font-medium mt-4 mb-2">Top Issues</h4>
+                                <div className="space-y-2">
+                                  {pageViolations.slice(0, 3).map((violation: WcagViolation) => (
+                                    <div key={violation.id} className="p-3 border rounded-lg flex items-start">
+                                      <Badge variant={impactBadgeVariant[violation.impact] || "default"} className="mt-0.5 mr-3">
+                                        {violation.impact}
+                                      </Badge>
+                                      <div>
+                                        <p className="font-medium">{violation.id}</p>
+                                        <p className="text-sm text-muted-foreground">{violation.description}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {pageViolations.length === 0 && (
+                                    <p className="text-muted-foreground text-center">No violations found on this page</p>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <p className="text-center text-muted-foreground">
+                          Detailed data not available for this page
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

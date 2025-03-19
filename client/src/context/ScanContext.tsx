@@ -3,11 +3,22 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 // Define the types
 export type ScanState = 'idle' | 'scanning' | 'results';
 
+export type PageResult = {
+  url: string;
+  score: number;
+  passedChecks: number;
+  issueCount: number;
+  violations: any[];
+};
+
 export type ScanResult = {
   score: number;
   passedChecks: number;
   issueCount: number;
   violations: any[];
+  isMultiPage?: boolean;
+  pagesScanned?: string[];
+  pageResults?: PageResult[];
 };
 
 // Create the context interface
