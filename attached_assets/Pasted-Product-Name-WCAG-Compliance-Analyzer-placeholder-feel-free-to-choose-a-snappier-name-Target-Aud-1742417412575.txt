@@ -1,0 +1,127 @@
+Product Name
+WCAG Compliance Analyzer (placeholder—feel free to choose a snappier name!)
+
+Target Audience
+Website owners and administrators.
+Web developers and designers.
+Accessibility consultants.
+Organizations required to meet accessibility standards (e.g., government, education, businesses).
+Objective
+To deliver an intuitive tool that evaluates website accessibility against WCAG standards, providing a free snapshot of compliance and a paid detailed report with actionable insights, while addressing automation limitations, dynamic content, scoring clarity, and scope control.
+
+Current Date
+March 18, 2025
+
+Key Features
+1. URL Input
+Description: Users enter a website URL via a simple homepage input field to initiate a scan.
+Requirements:
+Validate URL format (e.g., must include "http://" or "https://").
+Free version scans only the submitted URL (single page); paid version offers multi-page or full-site options.
+Use a headless browser (e.g., Puppeteer) to render dynamic content, with a 10-second timeout to ensure performance.
+2. Automated Scanning
+Description: The system analyzes the provided URL for WCAG compliance using automated tools.
+Requirements:
+Integrate Axe-core with Puppeteer to scan rendered pages, capturing dynamic content (e.g., JavaScript-driven elements).
+Evaluate key WCAG criteria, including:
+Text alternatives (e.g., missing alt text).
+Color contrast ratios.
+Keyboard accessibility (e.g., focusable elements).
+Heading structure and ARIA landmarks.
+Form labels and error handling.
+Limit free scans to one page; paid scans can expand to user-defined page sets or full-site crawls (up to 100 pages in premium tiers).
+Handle rendering errors gracefully with a retry option and partial results if timeouts occur.
+3. Snapshot Overview (Free Version)
+Description: Users receive a concise, automated summary of the website’s WCAG compliance after scanning.
+Requirements:
+Compliance Score: Display a percentage score (e.g., 85%) based on the ratio of passed Axe-core checks to total applicable checks (e.g., 28/30 passed = 93%).
+Accompany with a color-coded gauge (green: 80+, yellow: 50-79, red: <50).
+Include a disclaimer: “This score reflects automated checks only. Manual review may adjust results.”
+Major Issues: Highlight 3-5 critical violations (e.g., “10 images lack alt text,” “Contrast ratio below 4.5:1”) with brief descriptions.
+Transparency Note: State limitations: “Automated scans cover detectable issues (est. 20-50% of WCAG criteria). Upgrade for deeper analysis.”
+Call-to-Action: Prompt upgrade with “Get Detailed Report” button linking to paid tiers.
+4. Detailed Report (Paid Version)
+Description: A comprehensive analysis for paid users, enhancing the snapshot with actionable insights.
+Requirements:
+Full Violation List: Categorize all detected issues by WCAG principle (Perceivable, Operable, Understandable, Robust) and level (A, AA, AAA).
+Weighted Scoring: Provide a refined score deducting points based on violation severity (e.g., Level A: 5 points, AA: 3 points, AAA: 1 point per instance), with a 100-point base.
+Recommendations: Offer specific fixes (e.g., “Add alt=‘Person reading book’ to <img> at line 50”) with code examples.
+Prioritization: Flag high-impact issues (e.g., missing form labels) for urgent attention.
+Visual Aids: Include screenshots of problematic elements (e.g., low-contrast text) where feasible.
+Export Option: Deliver as a downloadable PDF or HTML report.
+Scope Expansion: Analyze multiple pages (up to 10 in Basic, 100 in Premium) based on user input or sitemap parsing.
+5. User Accounts
+Description: Optional accounts to enhance functionality and retention.
+Requirements:
+Enable registration/login with email or OAuth (e.g., Google).
+Store scan history, detailed reports, and subscription details.
+Track compliance trends over time for rescanned sites.
+Enforce rate limits for free users (e.g., 3 scans/day via IP or account).
+6. Additional Paid Features
+Description: Differentiate paid tiers with premium offerings.
+Requirements:
+Full-Site Scanning: Crawl multiple pages (Basic: 10, Premium: 100) using user-defined lists or sitemap parsing.
+API Access: Provide a RESTful API for developers to integrate scans into workflows (e.g., CI/CD pipelines).
+Manual Review Add-On: Offer expert evaluation for subjective criteria (e.g., alt text quality) as an upsell in Premium tier.
+Compliance Badge: Issue a digital badge for sites meeting a threshold (e.g., 90%+ score, manually verified).
+Technical Requirements
+Frontend
+Technologies: React for a responsive, accessible UI.
+Features:
+URL input field with validation feedback.
+Real-time scanning progress bar (e.g., “Analyzing page…”).
+Snapshot dashboard with score gauge and issue list.
+Detailed report view with collapsible sections for paid users.
+Backend
+Technologies: Node.js with Express for API and scan orchestration.
+Features:
+Process URL submissions via a queue system (e.g., Redis or AWS SQS) for scalability.
+Execute scans with Puppeteer and Axe-core, handling dynamic content with a 10-second render timeout.
+Generate scores and reports, storing results in a database.
+Database
+Technologies: PostgreSQL for structured storage.
+Features:
+Save user profiles, scan histories, and subscription statuses.
+Index results for quick retrieval in reports and trend tracking.
+Scanning Engine
+Technologies: Puppeteer + Axe-core.
+Process:
+Validate and queue URL.
+Render page with Puppeteer, waiting up to 10 seconds.
+Run Axe-core to detect violations.
+Calculate score (pass/fail ratio for free, weighted for paid) and compile results.
+Scalability and Performance
+Use asynchronous queues to manage scan load, prioritizing paid users.
+Optimize Puppeteer instances (e.g., reuse browsers, cap memory) for cost efficiency.
+Deploy on a cloud platform (e.g., AWS) with auto-scaling.
+Security
+Block invalid URLs (e.g., localhost, internal IPs) to prevent abuse.
+Apply rate limiting (3 free scans/day per IP or account).
+Secure paid features with authentication (e.g., JWT).
+Monetization
+Freemium Model:
+Free Tier: Single-page snapshot with pass/fail score and top issues.
+Basic Paid Tier: $10 one-time or $5/month for 10-page scans, detailed reports, and weighted scoring.
+Premium Paid Tier: $20/month for full-site scans (100 pages), API access, manual review add-on, and compliance badge.
+User Flow
+Homepage: User enters URL (e.g., “https://example.com”) and clicks “Scan.”
+Free Snapshot: Sees a 93% score (28/30 checks passed), top issues (e.g., “5 missing alt texts”), and a note: “Single-page scan complete. Upgrade for more!”
+Upgrade Prompt: “Unlock detailed fixes and multi-page scans” with a payment link.
+Paid Report: After subscribing, user selects 10 pages, receives a report with weighted score (e.g., 88/100), prioritized fixes, and export option.
+Solutions to Challenges
+Automation Limits
+Solution: Disclose automation coverage (20-50% of WCAG) in results; offer manual review in Premium tier; provide educational fixes in reports.
+Implementation: Add a “Limitations” section in the UI and upsell manual audits.
+Dynamic Content
+Solution: Use Puppeteer to render pages; cap render time at 10 seconds; handle errors with partial results and retry prompts.
+Implementation: Configure Puppeteer with timeouts and test on JavaScript-heavy sites (e.g., React apps).
+Scoring System
+Solution: Free tier uses pass/fail ratio (e.g., 28/30 = 93%); paid tier uses weighted deductions (e.g., 5/3/1 points per A/AA/AAA violation); include disclaimers for clarity.
+Implementation: Build a scoring module in the backend, refine via user feedback.
+Scope
+Solution: Limit free scans to one page; offer 10-page (Basic) and 100-page (Premium) paid scans; enforce via backend logic and rate limits (3 free/day).
+Implementation: Add scope controls in the UI and queue system.
+Next Steps
+MVP Build: Launch with free single-page scans, pass/fail scoring, and basic UI using React, Node.js, Puppeteer, and Axe-core.
+User Testing: Validate with diverse sites (static, dynamic) and refine scoring/UI based on feedback.
+Expansion: Add paid tiers, multi-page scans, and manual review after proving demand.
