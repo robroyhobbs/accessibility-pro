@@ -71,7 +71,7 @@ export class PostgresStorage implements IStorage {
           username VARCHAR(255) NOT NULL UNIQUE,
           password VARCHAR(255) NOT NULL,
           email VARCHAR(255),
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `);
       
@@ -81,12 +81,12 @@ export class PostgresStorage implements IStorage {
           id SERIAL PRIMARY KEY,
           url TEXT NOT NULL,
           score INTEGER NOT NULL,
-          passed_checks INTEGER NOT NULL,
-          issue_count INTEGER NOT NULL,
+          "passedChecks" INTEGER NOT NULL,
+          "issueCount" INTEGER NOT NULL,
           violations JSONB NOT NULL,
-          user_id INTEGER REFERENCES users(id),
-          is_paid BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          "userId" INTEGER REFERENCES users(id),
+          "isPaid" BOOLEAN DEFAULT FALSE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `);
       

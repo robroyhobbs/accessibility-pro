@@ -8,20 +8,20 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 // Scan schema
 export const scans = pgTable("scans", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("userId").references(() => users.id),
   url: text("url").notNull(),
   score: integer("score").notNull(),
-  passedChecks: integer("passed_checks").notNull(),
-  issueCount: integer("issue_count").notNull(),
+  passedChecks: integer("passedChecks").notNull(),
+  issueCount: integer("issueCount").notNull(),
   violations: jsonb("violations").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  isPaid: boolean("is_paid").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  isPaid: boolean("isPaid").default(false).notNull(),
 });
 
 // URL input schema for validation
