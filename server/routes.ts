@@ -21,7 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const rateLimits = new Map<string, { count: number, resetTime: number }>();
   
   const rateLimit = (req: Request, res: Response, next: NextFunction) => {
-    const ip = req.ip;
+    const ip = req.ip || 'unknown-ip';
     const now = Date.now();
     const FREE_SCANS_PER_DAY = 3;
     const DAY_IN_MS = 24 * 60 * 60 * 1000;

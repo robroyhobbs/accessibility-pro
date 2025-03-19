@@ -1,126 +1,128 @@
+import { useState, useEffect } from "react";
 import { useScanContext } from "@/context/ScanContext";
-import { useEffect, useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 type ScanStep = {
   id: string;
   name: string;
-  status: "pending" | "in-progress" | "completed";
+  status: "pending" | "in-progress" | "completed" | "error";
 };
 
-const initialSteps: ScanStep[] = [
-  { id: "loading", name: "Page Loading", status: "in-progress" },
-  { id: "structure", name: "Structure Analysis", status: "pending" },
-  { id: "wcag", name: "WCAG Evaluation", status: "pending" },
-  { id: "report", name: "Report Generation", status: "pending" },
-];
-
-const ScanProgress = () => {
+export default function ScanProgress() {
   const { scannedUrl } = useScanContext();
   const [progress, setProgress] = useState(0);
-  const [statusMessage, setStatusMessage] = useState("Loading website...");
-  const [steps, setSteps] = useState<ScanStep[]>(initialSteps);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  
+  // Simulate scanning steps
+  const [scanSteps, setScanSteps] = useState<ScanStep[]>([
+    { id: "initialize", name: "Initializing scanner", status: "in-progress" },
+    { id: "fetch", name: "Fetching website content", status: "pending" },
+    { id: "parse", name: "Parsing DOM structure", status: "pending" },
+    { id: "analyze", name: "Analyzing accessibility issues", status: "pending" },
+    { id: "generate", name: "Generating report", status: "pending" },
+  ]);
 
-  // Simulate progress for demo purposes
+  // Simulate scanning progress
   useEffect(() => {
-    let totalSteps = steps.length;
-    let currentStepIndex = 0;
-    let currentStep = steps[currentStepIndex];
+    const totalSteps = scanSteps.length;
+    let step = 0;
     
-    const messages = [
-      "Loading website...",
-      "Analyzing page structure and content...",
-      "Evaluating WCAG compliance...",
-      "Generating report...",
-      "Finalizing results..."
-    ];
-
-    const interval = setInterval(() => {
-      if (progress >= 100) {
-        clearInterval(interval);
-        return;
-      }
-
-      // Calculate which step we should be on based on progress
-      const newStepIndex = Math.min(Math.floor((progress / 100) * totalSteps), totalSteps - 1);
-      
-      if (newStepIndex > currentStepIndex) {
-        // Update previous step to completed
-        setSteps(prevSteps => 
-          prevSteps.map((step, idx) => 
-            idx === currentStepIndex 
-              ? { ...step, status: "completed" } 
-              : step
-          )
-        );
+    const timer = setInterval(() => {
+      if (step < totalSteps) {
+        // Update current step status
+        setScanSteps(prev => {
+          const updated = [...prev];
+          if (step > 0) {
+            updated[step - 1] = { ...updated[step - 1], status: "completed" };
+          }
+          updated[step] = { ...updated[step], status: "in-progress" };
+          return updated;
+        });
         
-        // Set new step to in-progress
-        setSteps(prevSteps => 
-          prevSteps.map((step, idx) => 
-            idx === newStepIndex 
-              ? { ...step, status: "in-progress" } 
-              : step
-          )
-        );
+        setCurrentStepIndex(step);
+        setProgress(Math.floor((step + 0.5) * (100 / totalSteps)));
         
-        currentStepIndex = newStepIndex;
-        currentStep = steps[currentStepIndex];
-        setStatusMessage(messages[Math.min(newStepIndex, messages.length - 1)]);
+        step++;
+      } else {
+        // Complete the last step
+        setScanSteps(prev => {
+          const updated = [...prev];
+          updated[totalSteps - 1] = { ...updated[totalSteps - 1], status: "completed" };
+          return updated;
+        });
+        
+        setProgress(100);
+        clearInterval(timer);
       }
-
-      setProgress(prev => Math.min(prev + 2, 100));
-    }, 100);
-
-    return () => clearInterval(interval);
+    }, 800); // Each step takes about 800ms for a realistic feel
+    
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <section id="scan-in-progress" className="py-12 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-neutral-dark">Scanning Your Website</h2>
-        <p className="text-gray-600">
-          We're checking <span className="text-primary font-medium">{scannedUrl}</span> for WCAG compliance issues
-        </p>
-      </div>
-      
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <div className="flex flex-col items-center">
-          <div className="relative w-64 h-6 bg-gray-200 rounded-full overflow-hidden mb-4">
-            <div 
-              className="absolute top-0 left-0 h-full bg-primary transition-all duration-300 ease-out" 
-              style={{ width: `${progress}%` }}
-            ></div>
+    <Card className="shadow-sm">
+      <CardContent className="pt-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2">Scanning in Progress</h2>
+            <p className="text-muted-foreground">
+              Analyzing <span className="font-medium text-foreground">{scannedUrl}</span> for WCAG compliance issues
+            </p>
           </div>
           
-          <p className="text-gray-600 mb-8">{statusMessage}</p>
+          <Progress value={progress} className="h-2 mb-8" />
           
-          <div className="grid grid-cols-2 gap-8 w-full max-w-md">
-            {steps.map((step) => (
-              <div className="flex items-center" key={step.id}>
-                {step.status === "completed" && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-success mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                )}
-                {step.status === "in-progress" && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary animate-spin mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                )}
-                {step.status === "pending" && (
-                  <div className="h-5 w-5 bg-gray-200 rounded-full mr-2"></div>
-                )}
-                <span className={`text-sm ${step.status === "pending" ? "text-gray-400" : "text-gray-600"}`}>
-                  {step.name}
-                </span>
+          <div className="space-y-4">
+            {scanSteps.map((step, index) => (
+              <div 
+                key={step.id} 
+                className={`flex items-center space-x-3 p-3 rounded-md transition-colors ${
+                  step.status === "in-progress" 
+                    ? "bg-primary/5 border border-primary/20" 
+                    : step.status === "completed"
+                    ? "opacity-70"
+                    : ""
+                }`}
+              >
+                <div className="flex-shrink-0">
+                  {step.status === "pending" && (
+                    <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30" />
+                  )}
+                  {step.status === "in-progress" && (
+                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                  )}
+                  {step.status === "completed" && (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  )}
+                  {step.status === "error" && (
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+                <div className="flex-grow">
+                  <p className={`font-medium ${
+                    step.status === "in-progress" ? "text-primary" : ""
+                  }`}>
+                    {step.name}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 text-sm text-muted-foreground">
+                  {index < currentStepIndex 
+                    ? "Complete" 
+                    : index === currentStepIndex 
+                    ? "In progress" 
+                    : "Pending"}
+                </div>
               </div>
             ))}
           </div>
           
-          <p className="text-sm text-gray-500 mt-8">This process typically takes 10-15 seconds for a single page.</p>
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            This may take a minute or two depending on the complexity of the website
+          </p>
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
-};
-
-export default ScanProgress;
+}
