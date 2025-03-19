@@ -202,6 +202,9 @@ export class MemStorage implements IStorage {
       id,
       userId,
       isPaid: insertScan.isPaid ?? false,
+      isMultiPage: insertScan.isMultiPage ?? false,
+      scanDepth: insertScan.scanDepth ?? 1,
+      pagesScanned: insertScan.pagesScanned ?? [],
       createdAt: new Date()
     };
     this.scans.set(id, scan);

@@ -22,6 +22,9 @@ export const scans = pgTable("scans", {
   violations: jsonb("violations").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   isPaid: boolean("isPaid").default(false).notNull(),
+  isMultiPage: boolean("isMultiPage").default(false).notNull(),
+  scanDepth: integer("scanDepth").default(1).notNull(),
+  pagesScanned: jsonb("pagesScanned").default([]).notNull(),
 });
 
 // URL input schema for validation
@@ -30,6 +33,11 @@ export const urlInputSchema = z.object({
     (url) => url.startsWith('http://') || url.startsWith('https://'),
     { message: "URL must start with http:// or https://" }
   ),
+  isMultiPage: z.boolean().default(false),
+  scanDepth: z.number().int().min(1).max(10).default(1)
+    .refine(depth => !depth || depth <= 3 || true, {
+      message: "Scan depth greater than 3 requires a premium account"
+    }),
 });
 
 // Violation schema for type safety
@@ -42,12 +50,24 @@ export const violationSchema = z.object({
   principle: z.string(),
 });
 
+// Page result schema
+export const pageResultSchema = z.object({
+  url: z.string(),
+  score: z.number(),
+  passedChecks: z.number(),
+  issueCount: z.number(),
+  violations: z.array(violationSchema),
+});
+
 // Scan result schema
 export const scanResultSchema = z.object({
   score: z.number(),
   passedChecks: z.number(),
   issueCount: z.number(),
   violations: z.array(violationSchema),
+  isMultiPage: z.boolean().default(false),
+  pagesScanned: z.array(z.string()).default([]),
+  pageResults: z.array(pageResultSchema).optional(),
 });
 
 // Insert schemas
@@ -60,4 +80,5 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Scan = typeof scans.$inferSelect;
 export type InsertScan = z.infer<typeof insertScanSchema>;
 export type ScanResult = z.infer<typeof scanResultSchema>;
+export type PageResult = z.infer<typeof pageResultSchema>;
 export type Violation = z.infer<typeof violationSchema>;

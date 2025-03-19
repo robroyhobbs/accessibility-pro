@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { url } = parseResult.data;
+      const { url, isMultiPage, scanDepth } = parseResult.data;
       
       // Check if URL is safe to scan
       if (!isSafeUrl(url)) {
@@ -75,10 +75,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if user is authenticated
       const userId = req.isAuthenticated() ? (req.user as Express.User).id : null;
-      const isPaid = req.body.isPaid === true && userId !== null;
+      const isPaid = req.isAuthenticated() && userId !== null;
       
-      // Perform the scan
-      const scanResult = await scanWebsite(url);
+      // Validate if multi-page scanning is allowed for this user
+      if (isMultiPage && !isPaid) {
+        return res.status(403).json({
+          message: "Multi-page scanning is a premium feature. Please log in to use this feature.",
+          requiresAuth: true
+        });
+      }
+      
+      // Validate scan depth for premium users
+      if (isMultiPage && isPaid && scanDepth > 3) {
+        // Premium users can scan up to 10 pages, but we need to make sure they're authenticated
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({
+            message: "Authentication required for deep scanning.",
+            requiresAuth: true
+          });
+        }
+      } else if (isMultiPage && !isPaid && scanDepth > 1) {
+        // Free users can only scan 1 page
+        return res.status(403).json({
+          message: "Deep scanning is a premium feature. Please log in to scan multiple pages.",
+          requiresAuth: true
+        });
+      }
+      
+      // Perform the scan with the appropriate parameters
+      const finalScanDepth = isPaid ? scanDepth : 1;
+      const finalIsMultiPage = isPaid ? isMultiPage : false;
+      
+      // Execute the scan with appropriate parameters
+      const scanResult = await scanWebsite(url, finalIsMultiPage, finalScanDepth);
       
       // Save the scan result to storage
       const scanData: InsertScan = {
@@ -88,7 +117,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         issueCount: scanResult.issueCount,
         violations: scanResult.violations,
         userId,
-        isPaid
+        isPaid,
+        isMultiPage: finalIsMultiPage,
+        scanDepth: finalScanDepth,
+        pagesScanned: scanResult.pagesScanned
       };
       
       // Store the scan in the database
@@ -97,7 +129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return the results
       return res.status(200).json({
         ...scanResult,
-        scanId: savedScan.id
+        scanId: savedScan.id,
+        isPremiumFeature: isMultiPage && scanDepth > 1
       });
     } catch (error: any) {
       // Handle timeout error specifically
