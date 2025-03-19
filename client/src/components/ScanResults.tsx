@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw, Download, AlertTriangle, Info, ChevronRight, Globe, Layers } from "lucide-react";
+import { Loader2, RefreshCw, Download, AlertTriangle, Info, ChevronRight, Globe, Layers, Code } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ComplianceGauge from "./ComplianceGauge";
 
@@ -20,6 +20,54 @@ type WcagViolation = {
   codeExample?: string;
   recommendation?: string;
   fixExample?: string;
+};
+
+// Helper component for rendering code examples
+const CodeExampleBlock = ({ 
+  violation 
+}: { 
+  violation: WcagViolation 
+}) => {
+  if (!violation.codeExample || !violation.recommendation || !violation.fixExample) {
+    return null;
+  }
+  
+  return (
+    <div className="border-b pb-5 mb-5 last:border-b-0 last:pb-0 last:mb-0">
+      <h4 className="font-medium mb-2 flex items-center">
+        <Badge variant={impactBadgeVariant[violation.impact] || "default"} className="mr-2">
+          {violation.impact}
+        </Badge>
+        {violation.description}
+      </h4>
+      
+      {/* Problem code */}
+      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-3 overflow-x-auto">
+        <div className="text-red-500 dark:text-red-400">
+          <span className="text-muted-foreground">// ❌ Problem Code</span><br />
+          <span dangerouslySetInnerHTML={{ __html: violation.codeExample.replace(/</g, '&lt;').replace(/>/g, '&gt;') }} />
+        </div>
+      </div>
+      
+      {/* Recommendation */}
+      <p className="text-sm mb-3">
+        {violation.recommendation}
+      </p>
+      
+      {/* Fix example */}
+      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+        <div className="text-green-500 dark:text-green-400">
+          <span className="text-muted-foreground">// ✅ Recommended Fix</span><br />
+          <span dangerouslySetInnerHTML={{ __html: violation.fixExample.replace(/</g, '&lt;').replace(/>/g, '&gt;') }} />
+        </div>
+      </div>
+      
+      <div className="flex items-center mt-2">
+        <Badge variant="outline" className="bg-primary/5 mr-2">{violation.wcagLevel}</Badge>
+        <span className="text-xs text-muted-foreground">{violation.principle} Principle</span>
+      </div>
+    </div>
+  );
 };
 
 // Mapping for WCAG impact to badge variant
@@ -331,69 +379,37 @@ export default function ScanResults() {
                 </div>
                 
                 <div className="p-4 border rounded-md">
-                  <h3 className="font-semibold mb-2">General Recommendations with Code Examples</h3>
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <Code className="h-5 w-5 mr-2" />
+                    Code Examples and Fix Recommendations
+                  </h3>
                   <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-1">1. Image Accessibility</h4>
-                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
-                        {/* Bad example */}
-                        <div className="text-red-500 dark:text-red-400">
-                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
-                          &lt;img src="logo.png" /&gt;
-                        </div>
-                        {/* Good example */}
-                        <div className="text-green-500 dark:text-green-400 mt-2">
-                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
-                          &lt;img src="logo.png" alt="Company Logo - Homepage Link" /&gt;
-                        </div>
+                    {violations
+                      .filter(v => v.codeExample && v.recommendation && v.fixExample)
+                      .slice(0, 5)  // Display top 5 violations with code examples
+                      .map((violation, index) => (
+                        <CodeExampleBlock key={`${violation.id}-${index}`} violation={violation} />
+                      ))}
+                      
+                    {violations.filter(v => v.codeExample && v.recommendation && v.fixExample).length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">No code recommendations available for the detected issues.</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        All images must have appropriate alt text that describes the image content or purpose.
-                        Decorative images should use alt="" to be ignored by screen readers.
-                      </p>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-1">2. Color Contrast</h4>
-                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
-                        {/* Bad example */}
-                        <div className="text-red-500 dark:text-red-400">
-                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
-                          .text &#123; color: #777; background-color: #eee; &#125;
-                        </div>
-                        {/* Good example */}
-                        <div className="text-green-500 dark:text-green-400 mt-2">
-                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
-                          .text &#123; color: #505050; background-color: #ffffff; &#125;
-                        </div>
+                    )}
+                      
+                    {/* Additional general accessibility tips if there are fewer than 3 violations with code examples */}
+                    {violations.filter(v => v.codeExample && v.recommendation && v.fixExample).length < 3 && (
+                      <div className="mt-6 pt-6 border-t">
+                        <h4 className="font-medium mb-3">General Accessibility Tips</h4>
+                        <ul className="space-y-2 ml-5 list-disc text-sm text-muted-foreground">
+                          <li>Use semantic HTML elements like <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, and <code>&lt;footer&gt;</code> to create landmarks.</li>
+                          <li>Ensure all interactive elements can be operated using a keyboard.</li>
+                          <li>Provide sufficient color contrast between text and background colors.</li>
+                          <li>Include proper alt text for images that convey information.</li>
+                          <li>Use ARIA attributes judiciously to enhance accessibility when needed.</li>
+                        </ul>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Ensure text has sufficient contrast against its background. WCAG 2.1 AA requires
-                        a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.
-                      </p>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-1">3. Form Inputs</h4>
-                      <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
-                        {/* Bad example */}
-                        <div className="text-red-500 dark:text-red-400">
-                          <span className="text-muted-foreground">// ❌ Bad Example</span><br />
-                          &lt;input type="text" placeholder="Enter name" /&gt;
-                        </div>
-                        {/* Good example */}
-                        <div className="text-green-500 dark:text-green-400 mt-2">
-                          <span className="text-muted-foreground">// ✅ Good Example</span><br />
-                          &lt;label for="name"&gt;Name&lt;/label&gt;<br />
-                          &lt;input type="text" id="name" name="name" aria-describedby="name-help" /&gt;<br />
-                          &lt;div id="name-help"&gt;Please enter your full name&lt;/div&gt;
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Form controls must have associated labels and clear instructions.
-                        Don't rely on placeholder text as the only form of labeling.
-                      </p>
-                    </div>
+                    )}
                   </div>
                 </div>
                 
