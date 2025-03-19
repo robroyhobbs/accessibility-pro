@@ -101,14 +101,62 @@ export default function ScanResults() {
   const handleDownloadReport = () => {
     setIsDownloading(true);
     
-    // Simulate download delay
-    setTimeout(() => {
+    try {
+      // Generate report content
+      const reportDate = new Date().toLocaleDateString();
+      const reportTime = new Date().toLocaleTimeString();
+      
+      // Create CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "WCAG Compliance Report for " + scannedUrl + "\n";
+      csvContent += "Generated on: " + reportDate + " at " + reportTime + "\n\n";
+      
+      // Add summary data
+      csvContent += "Overall Compliance Score: " + score.toFixed(0) + "%\n";
+      csvContent += "Issues Found: " + issueCount + "\n";
+      csvContent += "Passed Checks: " + passedChecks + "\n";
+      csvContent += "Total Violations: " + violations.length + "\n\n";
+      
+      // Add violations data
+      csvContent += "ID,Description,Impact,WCAG Level,Count,Principle\n";
+      
+      violations.forEach((violation) => {
+        const row = [
+          violation.id,
+          '"' + violation.description.replace(/"/g, '""') + '"',
+          violation.impact,
+          violation.wcagLevel,
+          violation.count,
+          '"' + violation.principle.replace(/"/g, '""') + '"'
+        ].join(',');
+        csvContent += row + "\n";
+      });
+      
+      // Create element to trigger download
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "accessibility_report_" + reportDate.replace(/\//g, '-') + ".csv");
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      document.body.removeChild(link);
+      
       toast({
         title: "Report Downloaded",
-        description: "Your accessibility report has been downloaded successfully",
+        description: "Your accessibility report has been downloaded as a CSV file",
       });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "There was an error generating the report. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error generating report:", error);
+    } finally {
       setIsDownloading(false);
-    }, 1500);
+    }
   };
 
   // Group violations by WCAG criteria
@@ -236,11 +284,70 @@ export default function ScanResults() {
                               <p className="text-muted-foreground mb-3">{violation.description}</p>
                               <div className="flex items-center">
                                 <span className="text-sm font-medium">Instances: {violation.count}</span>
-                                <Button variant="ghost" size="sm" className="ml-auto">
-                                  <span className="mr-1">View Details</span>
-                                  <ChevronRight className="h-4 w-4" />
-                                </Button>
+                                {violation.codeExample && violation.fixExample ? (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="ml-auto"
+                                    onClick={() => {
+                                      // Toggle visibility of code examples
+                                      const detailsElem = document.getElementById(`details-${violation.id}`);
+                                      if (detailsElem) {
+                                        detailsElem.classList.toggle('hidden');
+                                      }
+                                    }}
+                                  >
+                                    <span className="mr-1">View Details</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="ml-auto"
+                                    onClick={() => {
+                                      toast({
+                                        title: "Premium Feature",
+                                        description: "Detailed analysis is available in the premium plan",
+                                        variant: "default",
+                                      });
+                                    }}
+                                  >
+                                    <span className="mr-1">View Details</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
+                              
+                              {/* Hidden detail section that will be toggled */}
+                              {violation.codeExample && violation.fixExample && (
+                                <div id={`details-${violation.id}`} className="mt-4 hidden">
+                                  <div className="p-3 border rounded-md bg-muted/30">
+                                    <h5 className="font-medium mb-2">Issue Details</h5>
+                                    
+                                    {/* Problem code */}
+                                    <div className="bg-muted rounded-md p-3 text-sm font-mono mb-3 overflow-x-auto">
+                                      <div className="text-red-500 dark:text-red-400">
+                                        <span className="text-muted-foreground">// ❌ Problem Code</span><br />
+                                        <span dangerouslySetInnerHTML={{ __html: violation.codeExample.replace(/</g, '&lt;').replace(/>/g, '&gt;') }} />
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Recommendation */}
+                                    <p className="text-sm mb-3">
+                                      {violation.recommendation || "Fix the accessibility issue by following WCAG guidelines."}
+                                    </p>
+                                    
+                                    {/* Fix example */}
+                                    <div className="bg-muted rounded-md p-3 text-sm font-mono mb-2 overflow-x-auto">
+                                      <div className="text-green-500 dark:text-green-400">
+                                        <span className="text-muted-foreground">// ✅ Recommended Fix</span><br />
+                                        <span dangerouslySetInnerHTML={{ __html: violation.fixExample.replace(/</g, '&lt;').replace(/>/g, '&gt;') }} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
