@@ -4,8 +4,19 @@ import { storage } from "./storage";
 import { scanWebsite } from "./scanner";
 import { urlInputSchema, type InsertScan } from "@shared/schema";
 import { isSafeUrl } from "../client/src/lib/validators";
+import { setupAuth } from "./auth";
+
+// Middleware to ensure user is authenticated
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(401).json({ message: "Authentication required" });
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
   // Rate limiting middleware
   const rateLimits = new Map<string, { count: number, resetTime: number }>();
   
@@ -62,19 +73,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Check if user is authenticated
+      const userId = req.isAuthenticated() ? (req.user as Express.User).id : null;
+      const isPaid = req.body.isPaid === true && userId !== null;
+      
       // Perform the scan
       const scanResult = await scanWebsite(url);
       
       // Save the scan result to storage
-      // userId is null for non-authenticated users
       const scanData: InsertScan = {
         url,
         score: scanResult.score,
         passedChecks: scanResult.passedChecks,
         issueCount: scanResult.issueCount,
         violations: scanResult.violations,
-        userId: null, // Will be replaced with actual user ID when authentication is implemented
-        isPaid: false
+        userId,
+        isPaid
       };
       
       // Store the scan in the database
@@ -132,11 +146,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // If the scan belongs to a user, ensure the requester is authorized
+      if (scan.userId !== null && req.isAuthenticated()) {
+        if (scan.userId !== (req.user as Express.User).id) {
+          return res.status(403).json({
+            message: "You do not have permission to access this scan."
+          });
+        }
+      }
+      
       return res.status(200).json(scan);
     } catch (error) {
       console.error("Error fetching scan:", error);
       return res.status(500).json({
         message: "An error occurred while fetching the scan."
+      });
+    }
+  });
+
+  // Get all scans for the authenticated user
+  app.get("/api/user/scans", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const userScans = await storage.getUserScans(userId);
+      return res.status(200).json(userScans);
+    } catch (error) {
+      console.error("Error fetching user scans:", error);
+      return res.status(500).json({
+        message: "An error occurred while fetching your scans."
       });
     }
   });
