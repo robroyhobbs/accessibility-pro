@@ -15,7 +15,7 @@ export async function scanWebsite(url: string): Promise<ScanResult> {
   try {
     // Launch a headless browser with appropriate settings for accessibility scanning
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
