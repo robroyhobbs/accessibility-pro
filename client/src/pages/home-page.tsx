@@ -71,54 +71,57 @@ export default function HomePage() {
         {scanState === 'results' && <ScanResults />}
       </div>
 
-      {user && (
-        <Tabs defaultValue="your-scans" className="mt-12">
+      {/* Scan History Section */}
+      <div className="mt-12">
+        <Tabs defaultValue={user ? "your-scans" : "recent-scans"} className="mt-8">
           <TabsList className="mb-6">
-            <TabsTrigger value="your-scans">Your Scans</TabsTrigger>
+            {user && <TabsTrigger value="your-scans">Your Scans</TabsTrigger>}
             <TabsTrigger value="recent-scans">Recent Public Scans</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="your-scans">
-            <h2 className="text-2xl font-bold mb-4">Your Scan History</h2>
-            {isLoadingScans ? (
-              <div className="flex justify-center my-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
-              </div>
-            ) : userScans && userScans.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {userScans.map((scan) => (
-                  <Card key={scan.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="truncate text-lg">{scan.url}</CardTitle>
-                      <CardDescription>
-                        {formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true })}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between items-center mb-2">
-                        <div>
-                          <span className="text-3xl font-bold">{scan.score.toFixed(0)}</span>
-                          <span className="text-muted-foreground">/100</span>
+          {user && (
+            <TabsContent value="your-scans">
+              <h2 className="text-2xl font-bold mb-4">Your Scan History</h2>
+              {isLoadingScans ? (
+                <div className="flex justify-center my-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
+                </div>
+              ) : userScans && userScans.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {userScans.map((scan) => (
+                    <Card key={scan.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="truncate text-lg">{scan.url}</CardTitle>
+                        <CardDescription>
+                          {formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true })}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <span className="text-3xl font-bold">{scan.score.toFixed(0)}</span>
+                            <span className="text-muted-foreground">/100</span>
+                          </div>
+                          <div className="text-right">
+                            <p>Issues: <span className="font-medium">{scan.issueCount}</span></p>
+                            <p>Passed: <span className="font-medium">{scan.passedChecks}</span></p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p>Issues: <span className="font-medium">{scan.issueCount}</span></p>
-                          <p>Passed: <span className="font-medium">{scan.passedChecks}</span></p>
-                        </div>
-                      </div>
-                      <Button variant="outline" className="w-full" size="sm">
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 border rounded-lg bg-muted/20">
-                <p className="text-muted-foreground mb-2">You haven't run any scans yet</p>
-                <p>Start by scanning a website using the form above</p>
-              </div>
-            )}
-          </TabsContent>
+                        <Button variant="outline" className="w-full" size="sm">
+                          View Details
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 border rounded-lg bg-muted/20">
+                  <p className="text-muted-foreground mb-2">You haven't run any scans yet</p>
+                  <p>Start by scanning a website using the form above</p>
+                </div>
+              )}
+            </TabsContent>
+          )}
           
           <TabsContent value="recent-scans">
             <h2 className="text-2xl font-bold mb-4">Recent Public Scans</h2>
@@ -129,7 +132,7 @@ export default function HomePage() {
             ) : recentScans && recentScans.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {recentScans.map((scan) => (
-                  <Card key={scan.id} className="overflow-hidden">
+                  <Card key={scan.id} className="overflow-hidden hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">
                       <CardTitle className="truncate text-lg">{scan.url}</CardTitle>
                       <CardDescription>
@@ -161,7 +164,7 @@ export default function HomePage() {
             )}
           </TabsContent>
         </Tabs>
-      )}
+      </div>
     </div>
   );
 }
