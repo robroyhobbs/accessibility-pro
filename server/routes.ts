@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { scanWebsite } from "./scanner";
+import { scanWebsite } from "./enhanced-scanner"; // Use enhanced scanner instead
 import { urlInputSchema, type InsertScan } from "@shared/schema";
 import { isSafeUrl } from "../client/src/lib/validators";
 import { setupAuth } from "./auth";
