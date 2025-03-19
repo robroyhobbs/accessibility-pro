@@ -51,6 +51,9 @@ export const violationSchema = z.object({
   count: z.number(),
   wcagLevel: z.string(),
   principle: z.string(),
+  codeExample: z.string().optional(),
+  recommendation: z.string().optional(),
+  fixExample: z.string().optional(),
 });
 
 // Page result schema

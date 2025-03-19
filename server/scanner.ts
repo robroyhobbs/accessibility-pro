@@ -50,12 +50,12 @@ function getSimulatedSubpages(baseUrl: string, limit: number): string[] {
 
 /**
  * Generate accessibility violations for a single page
- * This creates a variable set of accessibility issues
+ * This creates a variable set of accessibility issues with code examples and recommendations
  * 
- * @returns An array of simulated accessibility violations
+ * @returns An array of simulated accessibility violations with code examples and recommendations
  */
 function generateViolations(pageUrl: string): Violation[] {
-  // Common WCAG issues
+  // Common WCAG issues with code examples and recommendations
   const possibleViolations: Violation[] = [
     {
       id: 'image-alt',
@@ -63,7 +63,10 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'critical',
       count: Math.floor(Math.random() * 5) + 1,
       wcagLevel: '1.1.1 (Level A)',
-      principle: 'Perceivable'
+      principle: 'Perceivable',
+      codeExample: `<img src="logo.png">`,
+      recommendation: 'Add descriptive alt text to images that convey information. Use empty alt attributes for decorative images. The alt text should provide the same information as the image.',
+      fixExample: `<img src="logo.png" alt="Company Logo: AccessibleTech Inc.">`
     },
     {
       id: 'color-contrast',
@@ -71,7 +74,14 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'serious',
       count: Math.floor(Math.random() * 7) + 1,
       wcagLevel: '1.4.3 (Level AA)',
-      principle: 'Perceivable'
+      principle: 'Perceivable',
+      codeExample: `<p style="color: #999; background-color: #fff;">
+  This text has insufficient contrast ratio (2.85:1)
+</p>`,
+      recommendation: 'Use a color contrast ratio of at least 4.5:1 for normal text and 3:1 for large text. Use tools like the WebAIM Contrast Checker to verify your color choices.',
+      fixExample: `<p style="color: #595959; background-color: #fff;">
+  This text has sufficient contrast ratio (7:1)
+</p>`
     },
     {
       id: 'keyboard',
@@ -79,7 +89,19 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'serious',
       count: Math.floor(Math.random() * 3) + 1,
       wcagLevel: '2.1.1 (Level A)',
-      principle: 'Operable'
+      principle: 'Operable',
+      codeExample: `<div onclick="toggleMenu()">Menu</div>`,
+      recommendation: 'Ensure all interactive elements are accessible via keyboard. Use appropriate elements like buttons instead of divs for interactive components, or add tabindex and keyboard event handlers.',
+      fixExample: `<button type="button" onclick="toggleMenu()">Menu</button>
+
+<!-- Or if you must use a div: -->
+<div 
+  role="button" 
+  tabindex="0" 
+  onclick="toggleMenu()" 
+  onkeydown="if(event.key==='Enter'||event.key===' ')toggleMenu()">
+  Menu
+</div>`
     },
     {
       id: 'html-lang',
@@ -87,7 +109,16 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'serious',
       count: pageUrl.includes('blog') ? 1 : 0,
       wcagLevel: '3.1.1 (Level A)',
-      principle: 'Understandable'
+      principle: 'Understandable',
+      codeExample: `<html>
+  <head>...</head>
+  <body>...</body>
+</html>`,
+      recommendation: 'Specify the language of your document using the lang attribute on the html element to help screen readers pronounce content correctly.',
+      fixExample: `<html lang="en">
+  <head>...</head>
+  <body>...</body>
+</html>`
     },
     {
       id: 'heading-order',
@@ -95,7 +126,15 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'moderate',
       count: Math.floor(Math.random() * 3),
       wcagLevel: '1.3.1 (Level A)',
-      principle: 'Perceivable'
+      principle: 'Perceivable',
+      codeExample: `<h1>Page Title</h1>
+<h3>First Section</h3> <!-- Skipped h2 -->
+<h2>Second Section</h2>`,
+      recommendation: 'Use heading elements in a hierarchical manner, starting with h1 and not skipping levels. Headings should reflect the structure of your content, not be used for styling purposes.',
+      fixExample: `<h1>Page Title</h1>
+<h2>First Section</h2>
+<h2>Second Section</h2>
+<h3>Subsection</h3>`
     },
     {
       id: 'landmark',
@@ -103,7 +142,14 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'moderate',
       count: Math.floor(Math.random() * 2),
       wcagLevel: '1.3.1 (Level A)',
-      principle: 'Perceivable'
+      principle: 'Perceivable',
+      codeExample: `<div class="header">...</div>
+<div class="content">...</div>
+<div class="footer">...</div>`,
+      recommendation: 'Use HTML5 semantic elements or ARIA landmarks to clearly define regions of your page. This helps screen reader users navigate the page efficiently.',
+      fixExample: `<header role="banner">...</header>
+<main role="main">...</main>
+<footer role="contentinfo">...</footer>`
     },
     {
       id: 'aria-hidden-focus',
@@ -111,7 +157,17 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'serious',
       count: Math.floor(Math.random() * 2),
       wcagLevel: '4.1.2 (Level A)',
-      principle: 'Robust'
+      principle: 'Robust',
+      codeExample: `<div aria-hidden="true">
+  <button>This button shouldn't be here</button>
+</div>`,
+      recommendation: 'Do not include focusable elements inside elements with aria-hidden="true". This creates confusion for screen reader users as they can focus on elements that should be hidden.',
+      fixExample: `<div aria-hidden="true">
+  <!-- No interactive elements here -->
+</div>
+<div>
+  <button>This button is properly placed</button>
+</div>`
     },
     {
       id: 'label',
@@ -119,7 +175,24 @@ function generateViolations(pageUrl: string): Violation[] {
       impact: 'critical',
       count: pageUrl.includes('contact') ? Math.floor(Math.random() * 4) + 1 : 0,
       wcagLevel: '3.3.2 (Level A)',
-      principle: 'Understandable'
+      principle: 'Understandable',
+      codeExample: `<form>
+  <input type="text" name="username">
+  <input type="password" name="password">
+  <button type="submit">Login</button>
+</form>`,
+      recommendation: 'Associate labels with their form controls either implicitly by wrapping the control with a label element, or explicitly using the "for" attribute that matches the input\'s id.',
+      fixExample: `<form>
+  <div>
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username">
+  </div>
+  <div>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password">
+  </div>
+  <button type="submit">Login</button>
+</form>`
     }
   ];
   
