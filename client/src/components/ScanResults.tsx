@@ -17,6 +17,9 @@ type WcagViolation = {
   count: number;
   wcagLevel: string;
   principle: string;
+  codeExample?: string;
+  recommendation?: string;
+  fixExample?: string;
 };
 
 // Mapping for WCAG impact to badge variant
