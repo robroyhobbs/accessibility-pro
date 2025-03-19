@@ -62,9 +62,13 @@ export class MemStorage implements IStorage {
   
   async createScan(insertScan: InsertScan): Promise<Scan> {
     const id = this.scanIdCounter++;
+    // Ensure userId is not undefined
+    const userId = insertScan.userId ?? null;
     const scan: Scan = {
       ...insertScan,
       id,
+      userId,
+      isPaid: insertScan.isPaid ?? false,  // Default to false if not provided
       createdAt: new Date()
     };
     this.scans.set(id, scan);
