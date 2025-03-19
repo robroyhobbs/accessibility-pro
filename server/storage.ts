@@ -1,8 +1,25 @@
-import { users, type User, type InsertUser, type Scan, type InsertScan, type ScanResult } from "@shared/schema";
+import { users, scans, type User, type InsertUser, type Scan, type InsertScan } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { eq, desc } from "drizzle-orm";
+import pg from "pg";
+const { Pool } = pg;
+import connectPgSimple from "connect-pg-simple";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const MemoryStore = createMemoryStore(session);
+const PgSessionStore = connectPgSimple(session);
+
+// Database connection setup
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Initialize drizzle
+const db = drizzle(pool);
 
 export interface IStorage {
   // User operations
@@ -18,6 +35,84 @@ export interface IStorage {
   
   // Session store for authentication
   sessionStore: session.Store;
+  
+  // Database setup (for initializing tables)
+  setupDatabase(): Promise<void>;
+}
+
+export class PostgresStorage implements IStorage {
+  public sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new PgSessionStore({
+      pool,
+      tableName: 'session',
+      createTableIfMissing: true,
+    });
+  }
+
+  async setupDatabase(): Promise<void> {
+    try {
+      // This is simplified - in a production app, we'd use proper migrations
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS session (
+          sid VARCHAR(255) PRIMARY KEY,
+          sess JSON NOT NULL,
+          expire TIMESTAMP(6) NOT NULL
+        );
+        
+        CREATE INDEX IF NOT EXISTS IDX_session_expire ON session (expire);
+      `);
+      
+      console.log("Database setup completed");
+    } catch (error) {
+      console.error("Error setting up database:", error);
+      throw error;
+    }
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+  
+  async getScan(id: number): Promise<Scan | undefined> {
+    const result = await db.select().from(scans).where(eq(scans.id, id));
+    return result[0];
+  }
+  
+  async getUserScans(userId: number): Promise<Scan[]> {
+    const result = await db
+      .select()
+      .from(scans)
+      .where(eq(scans.userId, userId))
+      .orderBy(desc(scans.createdAt));
+    return result;
+  }
+  
+  async createScan(insertScan: InsertScan): Promise<Scan> {
+    const result = await db.insert(scans).values(insertScan).returning();
+    return result[0];
+  }
+  
+  async getLatestScans(limit: number): Promise<Scan[]> {
+    const result = await db
+      .select()
+      .from(scans)
+      .orderBy(desc(scans.createdAt))
+      .limit(limit);
+    return result;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -37,6 +132,11 @@ export class MemStorage implements IStorage {
     });
   }
 
+  async setupDatabase(): Promise<void> {
+    // No setup needed for in-memory storage
+    console.log("Using in-memory storage (no database setup required)");
+  }
+  
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
@@ -89,4 +189,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Choose storage implementation based on environment
+// If DATABASE_URL is available, use PostgreSQL, otherwise use in-memory storage
+export const storage = process.env.DATABASE_URL 
+  ? new PostgresStorage() 
+  : new MemStorage();

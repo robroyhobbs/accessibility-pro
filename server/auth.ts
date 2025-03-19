@@ -33,6 +33,7 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || "wcag-accessibility-scanner-secret",
     resave: false,
     saveUninitialized: false,
+    store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
