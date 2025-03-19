@@ -5,10 +5,10 @@ import { Loader2 } from "lucide-react";
 
 const Header = () => {
   const { user, isLoading, logoutMutation } = useAuth();
-  const [location, navigate] = useLocation();
+  const [location, setLocation] = useLocation();
 
   const handleSignIn = () => {
-    navigate("/auth");
+    setLocation("/auth");
   };
 
   const handleLogout = () => {
@@ -34,15 +34,15 @@ const Header = () => {
             <Link href="/" className="text-gray-700 hover:text-primary font-medium">
               Home
             </Link>
-            <a href="#features" className="text-gray-700 hover:text-primary font-medium">
+            <Link href="/features" className="text-gray-700 hover:text-primary font-medium">
               Features
-            </a>
-            <a href="#pricing" className="text-gray-700 hover:text-primary font-medium">
+            </Link>
+            <Link href="/pricing" className="text-gray-700 hover:text-primary font-medium">
               Pricing
-            </a>
-            <a href="#contact" className="text-gray-700 hover:text-primary font-medium">
+            </Link>
+            <Link href="/contact" className="text-gray-700 hover:text-primary font-medium">
               Contact
-            </a>
+            </Link>
           </nav>
           
           <div>

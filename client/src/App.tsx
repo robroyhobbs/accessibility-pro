@@ -12,6 +12,9 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import ScanDetailPage from "@/pages/scan-detail-page";
+import PricingPage from "@/pages/pricing-page";
+import SubscriptionSuccessPage from "@/pages/subscription-success-page";
+import SubscriptionCancelPage from "@/pages/subscription-cancel-page";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -20,6 +23,9 @@ function Router() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/pricing" component={PricingPage} />
+      <Route path="/subscription/success" component={SubscriptionSuccessPage} />
+      <Route path="/subscription/cancel" component={SubscriptionCancelPage} />
       <Route path="/dashboard">
         <ProtectedRoute path="/dashboard" component={DashboardPage} />
       </Route>
